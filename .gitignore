@@ -1,0 +1,14 @@
+products_vectorstore/
+*.pkl
+# Ignore Python cache files
+__pycache__/
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+# Ignore virtual environment directories
+venv/
+# Ignore log files
+*.log
+# Ignore compiled Python files
+*.pyc
+# Ignore environment variable files
+.env
