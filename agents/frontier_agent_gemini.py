@@ -1,11 +1,10 @@
 # imports
-
 import os
 import re
 import math
 import json
 from typing import List, Dict
-from openai import OpenAI
+import google.generativeai as genai
 from sentence_transformers import SentenceTransformer
 from datasets import load_dataset
 import chromadb
@@ -18,9 +17,10 @@ class FrontierAgentGemini(Agent):
     name = "Frontier Agent Gemini"
     color = Agent.BLUE
 
-    MODEL = "gemini-1.5-flash"
+    MODEL = "gemini-2.5-flash"
 
     def __init__(self, collection):
+        genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
         self.model = SentenceTransformer("all-MiniLM-L6-v2")
         self.collection = collection
         self.log("Frontier Agent is ready")
@@ -68,7 +68,7 @@ class FrontierAgentGemini(Agent):
             try:
                 model = genai.GenerativeModel("gemini-2.5-flash")
                 # Convert OpenAI-style messages to a single prompt
-                prompt = "\n".join([f"{m['role'].capitalize()}: {m['content']}" for m in messages_for(item, documents, prices)]) # make the prompt the gemini way (different from openai)
+                prompt = "\n".join([f"{m['role'].capitalize()}: {m['content']}" for m in self.messages_for(description, documents, prices)]) # make the prompt the gemini way (different from openai)
                 response = model.generate_content(prompt)
                 reply = response.text
                 done = True
