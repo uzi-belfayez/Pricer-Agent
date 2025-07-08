@@ -17,7 +17,7 @@ class FrontierAgentGemini(Agent):
     name = "Frontier Agent Gemini"
     color = Agent.BLUE
 
-    MODEL = "gemini-2.5-flash"
+    MODEL = "gemini-2.5-pro"
 
     def __init__(self, collection):
         import google.generativeai as genai  # move import inside
