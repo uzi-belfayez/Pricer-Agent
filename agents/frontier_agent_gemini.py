@@ -20,7 +20,9 @@ class FrontierAgentGemini(Agent):
     MODEL = "gemini-2.5-flash"
 
     def __init__(self, collection):
+        import google.generativeai as genai  # move import inside
         genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+        self.genai = genai
         self.model = SentenceTransformer("all-MiniLM-L6-v2")
         self.collection = collection
         self.log("Frontier Agent is ready")
@@ -66,7 +68,7 @@ class FrontierAgentGemini(Agent):
         self.log(f"Frontier Agent is about to call {self.MODEL} with context including 5 similar products")
         while not done and retries > 0:
             try:
-                model = genai.GenerativeModel("gemini-2.5-flash")
+                model = self.genai.GenerativeModel(self.MODEL)
                 # Convert OpenAI-style messages to a single prompt
                 prompt = "\n".join([f"{m['role'].capitalize()}: {m['content']}" for m in self.messages_for(description, documents, prices)]) # make the prompt the gemini way (different from openai)
                 response = model.generate_content(prompt)
