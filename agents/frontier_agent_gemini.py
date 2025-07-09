@@ -17,10 +17,10 @@ class FrontierAgentGemini(Agent):
     name = "Frontier Agent Gemini"
     color = Agent.BLUE
 
-    MODEL = "gemini-2.5-pro"
+    MODEL = "gemini-2.5-flash"
 
     def __init__(self, collection):
-        import google.generativeai as genai  # move import inside
+        import google.generativeai as genai  
         genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
         self.genai = genai
         self.model = SentenceTransformer("all-MiniLM-L6-v2")
