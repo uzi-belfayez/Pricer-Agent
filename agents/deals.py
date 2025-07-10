@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Dict, Self
+from typing import List, Dict, Self, Optional
 from bs4 import BeautifulSoup
 import re
 import feedparser
@@ -91,7 +91,7 @@ class Deal(BaseModel):
     """
     product_description: str
     price: float
-    url: str
+    url: Optional[str] = None
 
 class DealSelection(BaseModel):
     """

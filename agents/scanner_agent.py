@@ -44,7 +44,6 @@ class ScannerAgent(Agent):
         genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
         self.genai = genai
         self.model = SentenceTransformer("all-MiniLM-L6-v2")
-        self.collection = collection
         self.log("Scanner Agent is ready")
     def fetch_deals(self, memory) -> List[ScrapedDeal]:
         """
