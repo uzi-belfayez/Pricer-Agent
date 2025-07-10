@@ -1,10 +1,17 @@
 import os
 import json
-from typing import Optional, List
 import google.generativeai as genai
 from sentence_transformers import SentenceTransformer
-from agents.deals import ScrapedDeal, DealSelection
+from agents.deals import Deal, ScrapedDeal, DealSelection
 from agents.agent import Agent
+from pydantic import BaseModel
+from typing import List, Dict, Self, Optional
+from bs4 import BeautifulSoup
+import re
+import feedparser
+from tqdm import tqdm
+import requests
+import time
 
 class ScannerAgent(Agent):
 
@@ -45,6 +52,7 @@ class ScannerAgent(Agent):
         self.genai = genai
         self.model = SentenceTransformer("all-MiniLM-L6-v2")
         self.log("Scanner Agent is ready")
+    
     def fetch_deals(self, memory) -> List[ScrapedDeal]:
         """
         Look up deals published on RSS feeds
@@ -59,23 +67,12 @@ class ScannerAgent(Agent):
 
     def make_user_prompt(self, scraped) -> str:
         """
-        Create a user prompt for OpenAI based on the scraped deals provided
+        Create a user prompt for Gemini based on the scraped deals provided
         """
         user_prompt = self.USER_PROMPT_PREFIX
         user_prompt += '\n\n'.join([scrape.describe() for scrape in scraped])
         user_prompt += self.USER_PROMPT_SUFFIX
         return user_prompt
-    
-    def make_user_prompt_gemini(self, scraped) -> str:
-        """
-        Create a Gemini-compatible prompt based on the scraped deals provided
-        """
-        full_prompt = self.SYSTEM_PROMPT.strip() + "\n\n"
-        full_prompt += self.USER_PROMPT_PREFIX.strip() + "\n\n"
-        full_prompt += '\n\n'.join([scrape.describe() for scrape in scraped])
-        full_prompt += self.USER_PROMPT_SUFFIX.strip()
-        return full_prompt
-
     
     def scan(self, memory: List[str]=[]) -> Optional[DealSelection]:
         """
@@ -102,43 +99,113 @@ class ScannerAgent(Agent):
             return result
         return None
     
+    @staticmethod
+    def parse_price(price_str: str) -> float:
+        """
+        Parse price string like "$210" to float
+        """
+        if isinstance(price_str, str):
+            # Remove $ and any commas, convert to float
+            return float(price_str.replace('$', '').replace(',', ''))
+        return float(price_str)
+    
+    @staticmethod
+    def extract_json(text: str) -> str:
+        """
+        Extract JSON from text that might contain markdown code blocks
+        """
+        # Remove markdown code blocks
+        text = re.sub(r'```json\n', '', text)
+        text = re.sub(r'```\n?', '', text)
+        text = text.strip()
+        
+        # Try to find JSON content - check for both objects {} and arrays []
+        object_start = text.find('{')
+        array_start = text.find('[')
+        
+        # Determine which comes first (or if only one exists)
+        if object_start != -1 and (array_start == -1 or object_start < array_start):
+            # JSON object
+            start = object_start
+            end = text.rfind('}') + 1
+        elif array_start != -1:
+            # JSON array
+            start = array_start
+            end = text.rfind(']') + 1
+        else:
+            # No JSON found, return as is
+            return text
+        
+        if start != -1 and end != 0:
+            return text[start:end]
+        return text
+    
     def scan_gemini(self, memory: List[str] = []) -> Optional[DealSelection]:
         """
         Call Gemini to provide a high potential list of deals with good descriptions and prices
         :param memory: a list of URLs representing deals already raised
         :return: a selection of good deals, or None if there aren't any
         """
-        scraped = self.fetch_deals(memory)
-        if scraped:
-            user_prompt = self.make_user_prompt(scraped)  # Already Gemini-compatible
-            self.log("Scanner Agent is calling Gemini API")
-
-            retries = 3
-            reply = None
-            while retries > 0:
-                try:
-                    model = self.genai.GenerativeModel(self.MODEL)
-                    response = model.generate_content(user_prompt)
-                    reply = response.text
-                    break
-                except Exception as e:
-                    self.log(f"Gemini API Error: {e}")
-                    retries -= 1
-
-            if not reply:
+        try:
+            # First fetch the deals
+            scraped = self.fetch_deals(memory)
+            if not scraped:
+                self.log("No new deals found to process")
                 return None
-
-            try:
-                parsed = json.loads(reply)
-                deals = parsed.get("deals", [])
-                filtered_deals = [deal for deal in deals if deal.get("price", 0) > 0]
-                selection = DealSelection(deals=filtered_deals)
-                self.log(f"Scanner Agent received {len(filtered_deals)} selected deals with price > 0 from Gemini")
-                return selection
-            except Exception as e:
-                self.log(f"Failed to parse Gemini JSON response: {e}")
-                return None
-
+            
+            # Create the user prompt with the scraped deals
+            user_prompt = self.make_user_prompt(scraped)
+            
+            # Combine system and user prompts for Gemini
+            full_prompt = f"{self.SYSTEM_PROMPT}\n\n{user_prompt}"
+            
+            self.log("Scanner Agent is calling Gemini")
+            model = genai.GenerativeModel(self.MODEL)
+            response = model.generate_content(full_prompt)
+            reply = response.text
+            
+            print("RAW Gemini reply:\n", repr(reply))  # Debug: show raw text
+            clean_text = self.extract_json(reply)
+            print("Cleaned JSON text:\n", clean_text)  # Debug: show stripped version
+            parsed = json.loads(clean_text)
+            print("Parsed JSON type:", type(parsed))  # Debug: show type
+            
+            # Determine deal list location
+            deals_data = None
+            if isinstance(parsed, dict):
+                print("Parsed keys:", parsed.keys())  # Extra debug
+                for key in ["selected_deals", "deals", "promising_deals"]:
+                    deals_data = parsed.get(key)
+                    if deals_data:
+                        break
+            elif isinstance(parsed, list):
+                deals_data = parsed
+            else:
+                raise ValueError("Parsed JSON is not a list or dict")
+            
+            if not deals_data:
+                raise ValueError("No deals found in parsed JSON")
+            
+            deals = [
+                Deal(
+                    title=deal.get("title", ""),  # Add default for title
+                    product_description=deal["product_description"],
+                    price=self.parse_price(deal["price"]),
+                    url=deal.get("url")  # Use .get() since URL might not exist
+                )
+                for deal in deals_data
+            ]
+            
+            # Filter out deals with price <= 0
+            deals = [deal for deal in deals if deal.price > 0]
+            self.log(f"Scanner Agent received {len(deals)} selected deals with price>0 from Gemini")
+            
+            return DealSelection(deals=deals)
+            
+        except json.JSONDecodeError as e:
+            self.log(f"❌ JSON parsing error: {e}")
+            print(f"❌ JSON parsing error: {e}")
+        except Exception as e:
+            self.log(f"❌ Error in scan_gemini: {e}")
+            print(f"❌ Error: {e}")
         return None
-                
-                
