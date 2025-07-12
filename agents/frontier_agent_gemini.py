@@ -21,7 +21,7 @@ class FrontierAgentGemini(Agent):
 
     def __init__(self, collection):
         import google.generativeai as genai  
-        genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+        genai.configure(api_key=os.getenv("GEMINI_API_KEY2"))
         self.genai = genai
         self.model = SentenceTransformer("all-MiniLM-L6-v2")
         self.collection = collection

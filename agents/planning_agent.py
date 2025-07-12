@@ -46,7 +46,7 @@ class PlanningAgent(Agent):
         :return: an Opportunity if one was surfaced, otherwise None
         """
         self.log("Planning Agent is kicking off a run")
-        selection = self.scanner.scan(memory=memory)
+        selection = self.scanner.scan_gemini(memory=memory)
         if selection:
             opportunities = [self.run(deal) for deal in selection.deals[:5]]
             opportunities.sort(key=lambda opp: opp.discount, reverse=True)

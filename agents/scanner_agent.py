@@ -1,6 +1,7 @@
 import os
 import json
 import google.generativeai as genai
+from openai import OpenAI
 from sentence_transformers import SentenceTransformer
 from agents.deals import Deal, ScrapedDeal, DealSelection
 from agents.agent import Agent
@@ -73,31 +74,6 @@ class ScannerAgent(Agent):
         user_prompt += '\n\n'.join([scrape.describe() for scrape in scraped])
         user_prompt += self.USER_PROMPT_SUFFIX
         return user_prompt
-    
-    def scan(self, memory: List[str]=[]) -> Optional[DealSelection]:
-        """
-        Call OpenAI to provide a high potential list of deals with good descriptions and prices
-        Use StructuredOutputs to ensure it conforms to our specifications
-        :param memory: a list of URLs representing deals already raised
-        :return: a selection of good deals, or None if there aren't any
-        """
-        scraped = self.fetch_deals(memory)
-        if scraped:
-            user_prompt = self.make_user_prompt(scraped)
-            self.log("Scanner Agent is calling OpenAI using Structured Output")
-            result = self.openai.beta.chat.completions.parse(
-                model=self.MODEL,
-                messages=[
-                    {"role": "system", "content": self.SYSTEM_PROMPT},
-                    {"role": "user", "content": user_prompt}
-              ],
-                response_format=DealSelection
-            )
-            result = result.choices[0].message.parsed
-            result.deals = [deal for deal in result.deals if deal.price>0]
-            self.log(f"Scanner Agent received {len(result.deals)} selected deals with price>0 from OpenAI")
-            return result
-        return None
     
     @staticmethod
     def parse_price(price_str: str) -> float:
