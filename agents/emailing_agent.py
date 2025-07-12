@@ -15,7 +15,7 @@ class MessagingAgent(Agent):
         self.log("Messaging Agent is initializing")
         if DO_EMAIL:
             self.email_sender = os.getenv('EMAIL_SENDER', 'your_email@gmail.com')
-            self.email_password = os.getenv('EMAIL_PASSWORD', 'your_password_or_app_password')
+            self.email_password = os.getenv('EMAIL_PASSWORD', 'your_password')
             self.email_receiver = os.getenv('EMAIL_RECEIVER', 'receiver_email@gmail.com')
             self.smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
             self.smtp_port = int(os.getenv('SMTP_PORT', 587))
