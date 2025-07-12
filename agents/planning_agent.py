@@ -4,6 +4,7 @@ from agents.deals import ScrapedDeal, DealSelection, Deal, Opportunity
 from agents.scanner_agent import ScannerAgent
 from agents.ensemble_agent import EnsembleAgent
 from agents.messaging_agent import MessagingAgent
+from agents.emailing_agent import EmailingAgent
 
 
 class PlanningAgent(Agent):
@@ -20,6 +21,7 @@ class PlanningAgent(Agent):
         self.scanner = ScannerAgent()
         self.ensemble = EnsembleAgent(collection)
         #self.messenger = MessagingAgent()
+        self.emailer = EmailingAgent()
         self.log("Planning Agent is ready")
 
     def run(self, deal: Deal) -> Opportunity:
@@ -51,7 +53,7 @@ class PlanningAgent(Agent):
             best = opportunities[0]
             self.log(f"Planning Agent has identified the best deal has discount ${best.discount:.2f}")
             if best.discount > self.DEAL_THRESHOLD:
-                self.messenger.alert(best)
+                self.emailer.alert(best)
             self.log("Planning Agent has completed a run")
             return best if best.discount > self.DEAL_THRESHOLD else None
         return None
