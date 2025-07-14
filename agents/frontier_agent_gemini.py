@@ -11,6 +11,7 @@ import chromadb
 from items import Item
 from testing import Tester
 from agents.agent import Agent
+import torch
 
 class FrontierAgentGemini(Agent):
 
@@ -23,7 +24,8 @@ class FrontierAgentGemini(Agent):
         import google.generativeai as genai  
         genai.configure(api_key=os.getenv("GEMINI_API_KEY2"))
         self.genai = genai
-        self.model = SentenceTransformer("all-MiniLM-L6-v2")
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.model = SentenceTransformer("all-MiniLM-L6-v2", device=device)
         self.collection = collection
         self.log("Frontier Agent is ready")
 

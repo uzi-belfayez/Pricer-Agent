@@ -2,6 +2,7 @@
 
 import os
 import re
+import torch
 from typing import List
 from sentence_transformers import SentenceTransformer
 import joblib
@@ -20,7 +21,8 @@ class RandomForestAgent(Agent):
         and the SentenceTransformer vector encoding model
         """
         self.log("Random Forest Agent is initializing")
-        self.vectorizer = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.vectorizer = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2', device=device)
         self.model = joblib.load('random_forest_model.pkl')
         self.log("Random Forest Agent is ready")
 

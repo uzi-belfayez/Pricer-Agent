@@ -1,6 +1,7 @@
 import os
 import json
 import google.generativeai as genai
+import torch
 from openai import OpenAI
 from sentence_transformers import SentenceTransformer
 from agents.deals import Deal, ScrapedDeal, DealSelection
@@ -51,7 +52,8 @@ class ScannerAgent(Agent):
         self.log("Scanner Agent is initializing")
         genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
         self.genai = genai
-        self.model = SentenceTransformer("all-MiniLM-L6-v2")
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.model = SentenceTransformer("all-MiniLM-L6-v2", device=device)
         self.log("Scanner Agent is ready")
     
     def fetch_deals(self, memory) -> List[ScrapedDeal]:
