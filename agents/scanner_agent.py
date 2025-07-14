@@ -53,7 +53,7 @@ class ScannerAgent(Agent):
         genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
         self.genai = genai
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model = SentenceTransformer("all-MiniLM-L6-v2", device=device)
+        self.model = SentenceTransformer("all-MiniLM-L6-v2", "cpu")
         self.log("Scanner Agent is ready")
     
     def fetch_deals(self, memory) -> List[ScrapedDeal]:

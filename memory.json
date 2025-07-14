@@ -1,0 +1,11 @@
+[
+  {
+    "deal": {
+      "product_description": "This Dell laptop features a powerful 13th Generation Intel Core i7-1355U processor, boasting 10 cores and capable of speeds up to 5.00 GHz for efficient multitasking and demanding applications. It comes equipped with a vibrant 15.6-inch Full HD display, featuring a 120Hz refresh rate, WVA, IPS technology, and an anti-glare coating with 250 nits brightness for clear visuals. Memory includes a substantial 16GB of RAM paired with a spacious 1TB M.2 PCIe SSD, providing ample storage and fast data access. The system runs on Windows 11 Home, offering a modern and intuitive user experience. Its model number is DC15250.",
+      "price": 450.0,
+      "url": "https://www.dealnews.com/products/Dell/Dell-15-13-th-Gen-i7-15-6-Laptop-w-16-GB-RAM-and-1-TB-SSD/491652.html?iref=rss-c39"
+    },
+    "estimate": 973.2342144801446,
+    "discount": 523.2342144801446
+  }
+]

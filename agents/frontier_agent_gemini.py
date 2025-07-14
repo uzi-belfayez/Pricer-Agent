@@ -25,7 +25,7 @@ class FrontierAgentGemini(Agent):
         genai.configure(api_key=os.getenv("GEMINI_API_KEY2"))
         self.genai = genai
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model = SentenceTransformer("all-MiniLM-L6-v2", device=device)
+        self.model = SentenceTransformer("all-MiniLM-L6-v2", "cpu")
         self.collection = collection
         self.log("Frontier Agent is ready")
 

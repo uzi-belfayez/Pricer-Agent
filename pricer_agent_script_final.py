@@ -131,7 +131,7 @@ class App:
                 opportunities = self.get_agent_framework().memory
                 row = selected_index.index[0]
                 opportunity = opportunities[row]
-                self.get_agent_framework().planner.messenger.alert(opportunity)
+                self.get_agent_framework().planner.emailer.alert(opportunity)
         
             with gr.Row():
                 gr.Markdown('<div style="text-align: center;font-size:24px"><strong>The Price is Right</strong> - Autonomous Agent Framework that hunts for deals</div>')
