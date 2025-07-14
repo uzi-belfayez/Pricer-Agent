@@ -8,12 +8,12 @@ This project implements a multi-agent system that scans websites for product lis
 
 The system combines different pricing strategies through specialized agents:
 
-- **Specialist Agent**: Expert system for specific product categories
+- **Specialist Agent**: Expert system for specific product categories, hosted on Modal as a fine-tuned LLM
 - **Frontier Agent**: Advanced pricing analysis using cutting-edge AI models
 - **Random Forest Agent**: Machine learning based price prediction
-- **Ensemble Agent**: Combines predictions from other agents using weighted averaging
+- **Ensemble Agent**: Combines predictions from all agents using weighted averaging (Linear Regression)
 - **Scanner Agent**: Processes and normalizes price data
-- **Planning Agent**: Coordinates pricing strategies and deal evaluation
+- **Planning Agent**: Coordinates between the scanner agent, which looks for deals, the ensemble agent, responsible for pricing and identifying deals, and the emailing agent, which sends the notification for the best possible deal.
 
 ## Features
 
@@ -27,6 +27,8 @@ The system combines different pricing strategies through specialized agents:
 - Email notifications for alerting users about good deals
 - Modular design allowing easy extension with new agents
 - Integration with modern AI models and frameworks
+
+![Gradio App](./Gradio_App.png)
 
 ## Prerequisites
 
@@ -58,43 +60,17 @@ Key dependencies include:
 
 ## Usage
 
-The main pricing functionality can be accessed through the `DealAgentFramework` class:
-
-```python
-from deal_agent_framework import DealAgentFramework
-
-# Initialize the agent framework
-agent_framework = DealAgentFramework()
-agent_framework.init_agents_as_needed()
-
-# Get price prediction for a product
-description = "Brand new iPhone 13 Pro 256GB in Sierra Blue"
-price = agent_framework.get_price(description)
-```
-
 To run the Gradio interface for browsing deals and interacting with the system, run:
 
 ```bash
-python interface.py
+python pricer_agent_script_final.py
 ```
 
 The system will scan websites, predict prices, evaluate deals, and display results in the web interface.
 
-Email notifications will be sent automatically when good deals are found.
+Email notifications will be sent automatically when good deals are found or when you click on the deal in the Gradio interface.
 
-## Project Structure
-
-```
-├── agents/                 # Agent implementations
-│   ├── ensemble_agent.py   # Combines predictions from other agents
-│   ├── frontier_agent.py   # Advanced AI pricing model
-│   ├── specialist_agent.py # Category-specific pricing
-│   └── scanner_agent.py    # Price data processing and website scanning
-├── deal_agent_framework.py # Main framework implementation coordinating agents and deal evaluation
-├── items.py               # Product item definitions
-├── interface.py           # Gradio interface for user interaction
-├── notifier.py            # Email notification implementation
-```
+The fine-tuned LLM used by the Specialist Agent is hosted on Modal, a platform that enables scalable deployment of machine learning models.
 
 ## Contributing
 
